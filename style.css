@@ -1,0 +1,161 @@
+:root {
+    --board-size: 600px;
+    --primary: #ff0055;
+    --wood: #5d4037;
+    --dark-surface: #121212;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background-color: #050505;
+    color: white;
+    font-family: 'Roboto', sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    perspective: 1200px;
+}
+
+/* --- Start Screen --- */
+#start-screen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #000; z-index: 2000;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+}
+.title-bleed {
+    font-family: 'Creepster', cursive; font-size: 5rem; color: #d00;
+    text-shadow: 0 0 20px #f00; animation: pulse 2s infinite;
+}
+@keyframes pulse { 0% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0.8; transform: scale(1); } }
+#start-screen button, #winner-overlay button {
+    margin-top: 30px; padding: 15px 40px; font-size: 1.2rem; font-weight: bold;
+    background: #a00; color: #fff; border: 2px solid #fff; cursor: pointer; transition: 0.2s;
+}
+#start-screen button:hover { background: #f00; box-shadow: 0 0 20px #f00; }
+
+/* --- Layout --- */
+#game-container { display: none; width: 95vw; max-width: 1400px; height: 90vh; }
+.game-layout { display: flex; justify-content: space-between; align-items: center; height: 100%; gap: 20px; }
+
+.sidebar {
+    background: rgba(15, 15, 15, 0.95); border: 1px solid #333;
+    padding: 20px; border-radius: 12px; height: 85%; width: 300px;
+    display: flex; flex-direction: column; align-items: center;
+    box-shadow: 0 0 30px rgba(0,0,0,1);
+}
+
+/* --- Board --- */
+.board-wrapper {
+    position: relative; width: var(--board-size); height: var(--board-size);
+    box-shadow: 0 0 80px rgba(0,0,0,0.8); background: #080808; border: 4px solid #444;
+}
+#board {
+    display: grid; grid-template-columns: repeat(10, 1fr); grid-template-rows: repeat(10, 1fr);
+    width: 100%; height: 100%; position: relative; z-index: 2;
+}
+.tile {
+    display: flex; justify-content: center; align-items: center;
+    border: 1px solid rgba(255,255,255,0.02); font-size: 11px; color: rgba(255,255,255,0.15);
+}
+#board-graphics {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 1; pointer-events: none; overflow: visible;
+}
+
+/* --- Snake Visuals --- */
+.snake-tongue {
+    transform-origin: 0 0;
+    animation: tongueFlicker 2s infinite ease-in-out;
+}
+@keyframes tongueFlicker {
+    0%, 85% { transform: scale(0.1); opacity: 0; }
+    86% { transform: scale(1) rotate(0deg); opacity: 1; }
+    88% { transform: scale(1) rotate(15deg); }
+    90% { transform: scale(1) rotate(-15deg); }
+    92% { transform: scale(1) rotate(15deg); }
+    100% { transform: scale(0.1); opacity: 0; }
+}
+.snake-eyes { animation: eyeGlow 3s infinite alternate; }
+@keyframes eyeGlow { 0% { fill: #b00; r: 1.5; } 100% { fill: #f00; r: 2.5; box-shadow: 0 0 5px red; } }
+
+/* --- Tokens --- */
+.player-token {
+    width: 35px; height: 35px; border-radius: 50%; position: absolute; z-index: 100;
+    box-shadow: 0 5px 15px rgba(0,0,0,1); border: 2px solid #fff;
+    display: flex; justify-content: center; align-items: center;
+    font-weight: bold; color: #000; font-size: 12px;
+    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* State when swallowed */
+.player-token.swallowed {
+    transition: none !important; 
+    transform: scale(0.6);
+    filter: brightness(0.5) sepia(1) hue-rotate(-50deg) saturate(3); 
+    z-index: 5; 
+}
+
+/* --- 3D Dice --- */
+#dice-container { 
+    perspective: 800px; margin: 40px 0; width: 100px; height: 100px;
+    display: flex; justify-content: center; align-items: center;
+}
+#dice {
+    width: 70px; height: 70px; position: relative;
+    transform-style: preserve-3d; 
+    transition: transform 0.5s cubic-bezier(0.1, 0.9, 0.2, 1);
+    cursor: pointer;
+}
+.face {
+    position: absolute; width: 70px; height: 70px;
+    background: #e0e0e0; border: 1px solid #999; border-radius: 10px;
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.4);
+    background-image: radial-gradient(circle at center, black 10px, transparent 11px); 
+    background-size: 100% 100%;
+}
+.front { transform: translateZ(35px); }
+.back { transform: rotateY(180deg) translateZ(35px); background-image: radial-gradient(circle at 25% 20%, black 8px, transparent 9px), radial-gradient(circle at 75% 20%, black 8px, transparent 9px), radial-gradient(circle at 25% 50%, black 8px, transparent 9px), radial-gradient(circle at 75% 50%, black 8px, transparent 9px), radial-gradient(circle at 25% 80%, black 8px, transparent 9px), radial-gradient(circle at 75% 80%, black 8px, transparent 9px); }
+.right { transform: rotateY(90deg) translateZ(35px); background-image: radial-gradient(circle at 20% 20%, black 8px, transparent 9px), radial-gradient(circle at 50% 50%, black 8px, transparent 9px), radial-gradient(circle at 80% 80%, black 8px, transparent 9px); }
+.left { transform: rotateY(-90deg) translateZ(35px); background-image: radial-gradient(circle at 20% 20%, black 8px, transparent 9px), radial-gradient(circle at 80% 20%, black 8px, transparent 9px), radial-gradient(circle at 20% 80%, black 8px, transparent 9px), radial-gradient(circle at 80% 80%, black 8px, transparent 9px); }
+.top { transform: rotateX(90deg) translateZ(35px); background-image: radial-gradient(circle at 20% 20%, black 8px, transparent 9px), radial-gradient(circle at 80% 80%, black 8px, transparent 9px); }
+.bottom { transform: rotateX(-90deg) translateZ(35px); background-image: radial-gradient(circle at 20% 20%, black 8px, transparent 9px), radial-gradient(circle at 80% 20%, black 8px, transparent 9px), radial-gradient(circle at 50% 50%, black 8px, transparent 9px), radial-gradient(circle at 20% 80%, black 8px, transparent 9px), radial-gradient(circle at 80% 80%, black 8px, transparent 9px); }
+
+.rolling { animation: jumpRoll 0.8s ease-in-out forwards; }
+@keyframes jumpRoll {
+    0% { transform: translate3d(0, 0, 0) rotateX(0) rotateY(0); }
+    40% { transform: translate3d(0, -150px, 50px) scale(1.3) rotateX(360deg) rotateY(180deg); } 
+    70% { transform: translate3d(0, 20px, 0) scale(0.9) rotateX(720deg) rotateY(360deg); }
+    85% { transform: translate3d(0, -10px, 0) scale(1.05) rotateX(900deg) rotateY(540deg); }
+    100% { transform: translate3d(0, 0, 0) scale(1) rotateX(1080deg) rotateY(720deg); }
+}
+
+#roll-btn { background: #ff9800; border: none; font-weight: bold; padding: 12px 30px; border-radius: 5px; cursor: pointer; box-shadow: 0 0 15px #ff9800; margin-top: 20px; transition: transform 0.1s; }
+#roll-btn:active { transform: scale(0.95); }
+#roll-btn:disabled { background: #555; box-shadow: none; cursor: not-allowed; }
+#message-box { margin-top: 20px; padding: 10px; border-top: 1px solid #333; width: 100%; text-align: center; color: #bbb; font-style: italic; }
+#current-player-badge { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 1.2rem; }
+#turn-token-preview { width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; }
+#player-list li { list-style: none; padding: 5px 0; border-bottom: 1px solid #333; font-size: 0.9rem; }
+#winner-overlay, #scare-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 3000; display: none; flex-direction: column; justify-content: center; align-items: center; }
+#winner-overlay { background: rgba(0,0,0,0.95); }
+.win-title { font-size: 5rem; color: gold; text-shadow: 0 0 20px gold; font-family: 'Creepster', cursive; }
+#winner-token-large { width: 80px; height: 80px; border-radius: 50%; margin: 20px; border: 4px solid white; }
+#confetti-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+#scare-overlay { background: black; }
+.monster-face { width: 300px; height: 300px; background: #002200; border-radius: 40%; position: relative; animation: shake 0.2s infinite; box-shadow: 0 0 50px #0f0; }
+.eye { width: 50px; height: 50px; background: yellow; border-radius: 50%; position: absolute; top: 60px; box-shadow: 0 0 20px yellow; }
+.eye::after { content: ''; width: 8px; height: 40px; background: black; position: absolute; left: 21px; top: 5px; }
+.left { left: 60px; } .right { right: 60px; }
+.mouth { width: 180px; height: 100px; background: #300; position: absolute; bottom: 30px; left: 60px; border-radius: 10px 10px 90px 90px; overflow: hidden; }
+.teeth { width: 100%; height: 20px; background: repeating-linear-gradient(45deg, white, white 10px, transparent 10px, transparent 20px); }
+.scream-text { color: red; font-family: 'Creepster', cursive; font-size: 5rem; margin-top: 30px; }
+@keyframes shake { 0% { transform: translate(1px, 1px); } 100% { transform: translate(-1px, -1px); } }
+@media (max-width: 900px) {
+    .game-layout { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; flex-direction: row; justify-content: space-around; padding: 10px; }
+    :root { --board-size: 94vw; }
+    .player-token { width: 25px; height: 25px; font-size: 10px; }
+}
